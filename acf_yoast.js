@@ -30,13 +30,14 @@
      * jQuery object
      */
     AcfPlugin.prototype.setContent = function ($el) {
-        $el = $el.closest('[data-name][data-type][data-key]');
+        $el = $el.find('[data-field_name][data-field_type][data-field_key]');
+        //console.log("setting yoast loose on this", $el);
 
-        var key = $el.attr('data-key'),
-            type = $el.attr('data-type'),
+        var key = $el.attr('data-field_key'),
+            type = $el.attr('data-field_type'),
             value = null;
 
-        var $parents = $el.parents('[data-name][data-type][data-key],[data-id]');
+        var $parents = $el.parents('[data-field_name][data-field_type][data-field_key],[data-id]');
 
         switch (type) {
             case 'text' :
@@ -70,7 +71,7 @@
             $parents.get().reverse().forEach(function(element) {
               var $parent = $(element);
               // parent is either a row/layout (get the id) or a field (get the key)
-              var id = $parent.is('[data-id]') ? $parent.attr('data-id') : $parent.attr('data-key');
+              var id = $parent.is('[data-id]') ? $parent.attr('data-id') : $parent.attr('data-field_key');
               if (parentContent[id] === undefined) {
                 parentContent[id] = {};
               }
@@ -92,14 +93,14 @@
       if ($el.attr('data-id') === 'acfcloneindex') {
         return; // adding an element triggers remove on the clone, ignore this
       }
-      var $parents = $el.parents('[data-name][data-type][data-key],[data-id]');
+      var $parents = $el.parents('[data-field_name][data-field_type][data-field_key],[data-id]');
       var parentContent = this.content;
       if ($parents.length > 0) {
         // loop through the parents, in reverse order (top-level elements first)
         $parents.reverse().each(function() {
           var $parent = $(this);
           // parent is either a row/layout (get the id) or a field (get the key)
-          var id = $parent.is('[data-id]') ? $parent.attr('data-id') : $parent.attr('data-key');
+          var id = $parent.is('[data-id]') ? $parent.attr('data-id') : $parent.attr('data-field_key');
           parentContent = parentContent[id];
           if (parentContent === undefined) {
             return false;
@@ -161,9 +162,33 @@
         acfPlugin.registerPlugin();
         acfPlugin.registerModifications();
 
-        acf.add_action('load_field', acfPlugin.setContent.bind(acfPlugin));
-        acf.add_action('change', acfPlugin.setContent.bind(acfPlugin));
-        acf.add_action('remove', acfPlugin.removeContent.bind(acfPlugin));
+        //acf.add_action('load_field', acfPlugin.setContent.bind(acfPlugin));
+        //acf.add_action('change', acfPlugin.setContent.bind(acfPlugin));
+        //acf.add_action('remove', acfPlugin.removeContent.bind(acfPlugin));
+
+    });
+
+
+    $(document).on('acf/setup_fields', function(e, div){
+        // Set content to ACF fields
+        $(div).find('.acf_postbox').not('.acf-hidden').each(function(){
+            var $el = $(this);
+            acfPlugin.setContent($el);
+
+            // Attach wysiwyg onChange event to update Yoast content.
+            if ($el.find('[data-field_type]').attr('data-field_type') == 'wysiwyg') {
+                //console.log('found a wysiwyg!', $el);
+                $el.find('textarea').change(function() {
+                    acfPlugin.setContent($el);
+                })
+            }
+        });
+    });
+
+    $(document).on('acf/remove_fields', function(e, div){
+        $(div).find('.acf_postbox').not('.acf-hidden').each(function(){
+            acfPlugin.setContent($(this));
+        });
     });
 
 }(jQuery));
