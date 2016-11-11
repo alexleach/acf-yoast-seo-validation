@@ -31,7 +31,6 @@
      */
     AcfPlugin.prototype.setContent = function ($el) {
         $el = $el.find('[data-field_name][data-field_type][data-field_key]');
-        //console.log("setting yoast loose on this", $el);
 
         var key = $el.attr('data-field_key'),
             type = $el.attr('data-field_type'),
@@ -177,7 +176,6 @@
 
             // Attach wysiwyg onChange event to update Yoast content.
             if ($el.find('[data-field_type]').attr('data-field_type') == 'wysiwyg') {
-                //console.log('found a wysiwyg!', $el);
                 $el.find('textarea').change(function() {
                     acfPlugin.setContent($el);
                 })
