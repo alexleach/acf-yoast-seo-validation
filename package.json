@@ -1,0 +1,30 @@
+{
+  "name": "acf-yoast-seo-validation",
+  "version": "0.4.0",
+  "description": "Add Yoast SEO Validation to your ACFv4 Fields",
+  "main": "acf_yoast.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alexleach/acf-yoast-seo-validation.git"
+  },
+  "keywords": [
+    "wordpress",
+    "acf",
+    "yoast",
+    "seo"
+  ],
+  "author": "",
+  "license": "GPL-3.0+",
+  "bugs": {
+    "url": "https://github.com/alexleach/acf-yoast-seo-validation/issues"
+  },
+  "homepage": "https://github.com/alexleach/acf-yoast-seo-validation#readme",
+  "devDependencies": {
+    "grunt": "^1.0.1",
+    "grunt-contrib-jshint": "^1.0.0",
+    "grunt-contrib-uglify": "^2.0.0"
+  }
+}
