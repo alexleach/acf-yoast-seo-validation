@@ -12,9 +12,9 @@
  * All rights reserved.
  *
  */
+var acfPlugin;
 (function ($) {
 
-    var acfPlugin;
 
     var AcfPlugin = function () {
         this.content = {};
@@ -30,13 +30,10 @@
      * jQuery object
      */
     AcfPlugin.prototype.setContent = function ($el) {
-        $el = $el.find('[data-field_name][data-field_type][data-field_key]');
 
         var key = $el.attr('data-field_key'),
             type = $el.attr('data-field_type'),
             value = null;
-
-        var $parents = $el.parents('[data-field_name][data-field_type][data-field_key],[data-id]');
 
         switch (type) {
             case 'text' :
@@ -63,14 +60,17 @@
                 value = null;
         }
 
+        var $parents = $el.parents('[data-field_name][data-field_type][data-field_key],tr.row');
+
         if (value !== null) {
           var parentContent = this.content;
           if ($parents.length > 0) {
             // loop through the parents, in reverse order (top-level elements first)
+            var ind = $el.closest('tr.row').index();
             $parents.get().reverse().forEach(function(element) {
               var $parent = $(element);
               // parent is either a row/layout (get the id) or a field (get the key)
-              var id = $parent.is('[data-id]') ? $parent.attr('data-id') : $parent.attr('data-field_key');
+              var id = $parent.is('tr.row') ? ind : $parent.attr('data-field_key');
               if (parentContent[id] === undefined) {
                 parentContent[id] = {};
               }
@@ -89,17 +89,18 @@
      * @param {type} $el The removed element, either a repeater row or a layout
      */
     AcfPlugin.prototype.removeContent = function($el) {
-      if ($el.attr('data-id') === 'acfcloneindex') {
+
+      if ($el.parents('.row-clone').length > 0) {
         return; // adding an element triggers remove on the clone, ignore this
       }
-      var $parents = $el.parents('[data-field_name][data-field_type][data-field_key],[data-id]');
+      var $parents = $el.parents('[data-field_name][data-field_type][data-field_key],tr.row');
       var parentContent = this.content;
       if ($parents.length > 0) {
         // loop through the parents, in reverse order (top-level elements first)
         $parents.reverse().each(function() {
           var $parent = $(this);
           // parent is either a row/layout (get the id) or a field (get the key)
-          var id = $parent.is('[data-id]') ? $parent.attr('data-id') : $parent.attr('data-field_key');
+          var id = $parent.is('tr.row') ? ind : $parent.attr('data-field_key');
           parentContent = parentContent[id];
           if (parentContent === undefined) {
             return false;
@@ -107,8 +108,11 @@
         });
       }
       if (parentContent !== undefined) {
-        delete parentContent[$el.attr('data-id')];
-        YoastSEO.app.pluginReloaded(this.pluginName);
+        var key = $el.attr('data-field_key');
+        if (typeof key !== typeof undefined && key !== false) {
+          delete parentContent[key];
+          YoastSEO.app.pluginReloaded(this.pluginName);
+        }
       }
     };
 
@@ -136,7 +140,6 @@
         if ($.isEmptyObject(this.content)) {
           return yoastContent;
         }
-        yoastContent += '\n';
         $.each(this.content, function (key, value) {
           yoastContent = addSubContent(yoastContent, value);
         });
@@ -146,9 +149,7 @@
     function addSubContent(yoastContent, subContent) {
       if (typeof subContent === 'object') { // repeater or layout
         $.each(subContent, function(containerKey, containerValue) {
-          $.each(containerValue, function(subkey, subvalue) {
-            yoastContent = addSubContent(yoastContent, subvalue);
-          });
+          yoastContent = addSubContent(yoastContent, containerValue);
         });
       } else {
         yoastContent += subContent + '\n';
@@ -156,37 +157,42 @@
       return yoastContent;
     }
 
+    acfPlugin = new AcfPlugin();
+    var boundSetContent = acfPlugin.setContent.bind(acfPlugin);
+
     $(window).on('YoastSEO:ready', function () {
-        acfPlugin = new AcfPlugin();
-        acfPlugin.registerPlugin();
-        acfPlugin.registerModifications();
-
-        //acf.add_action('load_field', acfPlugin.setContent.bind(acfPlugin));
-        //acf.add_action('change', acfPlugin.setContent.bind(acfPlugin));
-        //acf.add_action('remove', acfPlugin.removeContent.bind(acfPlugin));
-
+      acfPlugin.registerPlugin();
+      acfPlugin.registerModifications();
     });
 
 
     $(document).on('acf/setup_fields', function(e, div){
-        // Set content to ACF fields
-        $(div).find('.acf_postbox').not('.acf-hidden').each(function(){
-            var $el = $(this);
-            acfPlugin.setContent($el);
+      // Find ACF fields for Yoast
+      $(div).find('.acf_postbox').not('.acf-hidden').find('.field').each(function(){
 
-            // Attach wysiwyg onChange event to update Yoast content.
-            if ($el.find('[data-field_type]').attr('data-field_type') == 'wysiwyg') {
-                $el.find('textarea').change(function() {
-                    acfPlugin.setContent($el);
-                })
-            }
-        });
+        var $el = $(this).closest('[data-field_name][data-field_type][data-field_key]');
+
+        if ($el.parents('.row-clone').length > 0) {
+          return;
+        }
+
+        boundSetContent($el);
+
+        // Attach wysiwyg onChange event to update Yoast content.
+        var type = $el.attr('data-field_type');
+        if (type == 'wysiwyg' || type == 'textarea') {
+          $el.find('textarea').change(function() {
+            boundSetContent($el);
+          })
+        }
+      });
     });
 
     $(document).on('acf/remove_fields', function(e, div){
-        $(div).find('.acf_postbox').not('.acf-hidden').each(function(){
-            acfPlugin.setContent($(this));
-        });
+      $(div).find('.acf_postbox').not('.acf-hidden').each(function(){
+        boundSetContent($(this));
+      });
     });
 
 }(jQuery));
+/* vim: set sw=2 sts=2 ts=2 */

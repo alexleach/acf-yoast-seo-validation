@@ -12,10 +12,6 @@ Copyright: DACHCOM.DIGITAL, Stefan Hagspiel
 
 Class AcfYoastSeoValidator {
 
-  //public function __construct() {
-    //add_action( 'admin_enqueue_scripts',  array($this, 'bind_js'));
-  //}
-
   public function __construct() {
     if (defined('WPSEO_VERSION')) {
       $min = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ? '' : '.min';
@@ -25,7 +21,6 @@ Class AcfYoastSeoValidator {
         array('acf-input'), false, true);
     }
   }
-
 }
 
 add_action( 'admin_enqueue_scripts', 'acf_yoast_init' );
