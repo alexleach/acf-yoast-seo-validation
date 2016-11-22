@@ -1,10 +1,10 @@
 <?php
 /*
-Plugin Name: Dachcom ACF - YOAST SEO Validation
-Plugin URI: https://github.com/dachcom-digital/acf-yoast-seo-validation.git
+Plugin Name: Dachcom ACFv4 - YOAST SEO Validation
+Plugin URI: https://github.com/alexleach/acf-yoast-seo-validation/tree/acf4
 Description: Add a YOAST SEO (3+) Validation to ACF.
-Version: 5.3.2.2
-Author: Stefan Hagspiel
+Version: 4.4.1.1
+Author: Stefan Hagspiel, Alex Leach
 Author URI: http://www.dachcom.com
 Copyright: DACHCOM.DIGITAL, Stefan Hagspiel
 */
